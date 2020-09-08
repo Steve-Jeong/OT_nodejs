@@ -2,51 +2,7 @@ var http = require('http');
 var fs = require('fs');
 var url = require('url');
 const qs = require('querystring');
-
-var template = {
-  HTML : function (title, contents, body, control) {
-      return `
-      <!doctype html>
-      <html>
-      <head>
-        <title>WEB1 - ${title}</title>
-        <meta charset="utf-8">
-      </head>
-      <body>
-        <h1><a href="/">WEB</a></h1>
-        <ul>${contents}</ul>
-        ${control} 
-        ${body}
-      </body>
-      </html>
-    `},
-  List : function (filelist) {
-      var contents = ``;
-      for (var list of filelist) {
-        contents += `<li><a href ="/?id=${list}">${list}</a></li>`
-      }
-    
-      return contents;
-    },
-  Body : function (title, description) {
-      return `<h2>${title}</h2><p>${description}</p>`
-    },
-  Create : function () {
-      return `
-        <form action="http://localhost:3000/create_process" method="POST">
-          <p><input type="text" name='title' placeholder="title"></p>
-          <p><textarea name="description" id="" cols="30" rows="5"  \
-            placeholder="Description"></textarea></p>
-          <p><input type="submit" value="send"></p>
-        </form>
-      `
-    },
-  makePage : function (title, contents, body, control, response) {
-      html = template.HTML(title, contents, body, control);
-      response.writeHead(200);
-      response.end(html);
-    }
-}
+var template = require('./lib/template.js');
 
 var app = http.createServer(function (request, response) {
   var _url = url.parse(request.url, true);
