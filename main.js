@@ -3,52 +3,49 @@ var fs = require('fs');
 var url = require('url');
 const qs = require('querystring');
 
-function templateList(filelist) {
-  var contents = ``;
-  for (var list of filelist) {
-    contents += `<li><a href ="/?id=${list}">${list}</a></li>`
-  }
-
-  return contents;
-}
-
-function templateHTML(title, contents, body, control) {
-  return `
-  <!doctype html>
-  <html>
-  <head>
-    <title>WEB1 - ${title}</title>
-    <meta charset="utf-8">
-  </head>
-  <body>
-    <h1><a href="/">WEB</a></h1>
-    <ul>${contents}</ul>
-    ${control} 
-    ${body}
-  </body>
-  </html>
-`;
-}
-
-function templateBody(title, description) {
-  return `<h2>${title}</h2><p>${description}</p>`
-}
-
-function templateCreate() {
-  return `
-    <form action="http://localhost:3000/create_process" method="POST">
-      <p><input type="text" name='title' placeholder="title"></p>
-      <p><textarea name="description" id="" cols="30" rows="5"  \
-        placeholder="Description"></textarea></p>
-      <p><input type="submit" value="send"></p>
-    </form>
-  `
-}
-
-function makePage(title, contents, body, control, response) {
-  template = templateHTML(title, contents, body, control);
-  response.writeHead(200);
-  response.end(template);
+var template = {
+  HTML : function (title, contents, body, control) {
+      return `
+      <!doctype html>
+      <html>
+      <head>
+        <title>WEB1 - ${title}</title>
+        <meta charset="utf-8">
+      </head>
+      <body>
+        <h1><a href="/">WEB</a></h1>
+        <ul>${contents}</ul>
+        ${control} 
+        ${body}
+      </body>
+      </html>
+    `},
+  List : function (filelist) {
+      var contents = ``;
+      for (var list of filelist) {
+        contents += `<li><a href ="/?id=${list}">${list}</a></li>`
+      }
+    
+      return contents;
+    },
+  Body : function (title, description) {
+      return `<h2>${title}</h2><p>${description}</p>`
+    },
+  Create : function () {
+      return `
+        <form action="http://localhost:3000/create_process" method="POST">
+          <p><input type="text" name='title' placeholder="title"></p>
+          <p><textarea name="description" id="" cols="30" rows="5"  \
+            placeholder="Description"></textarea></p>
+          <p><input type="submit" value="send"></p>
+        </form>
+      `
+    },
+  makePage : function (title, contents, body, control, response) {
+      html = template.HTML(title, contents, body, control);
+      response.writeHead(200);
+      response.end(html);
+    }
 }
 
 var app = http.createServer(function (request, response) {
@@ -60,15 +57,15 @@ var app = http.createServer(function (request, response) {
       title = 'Welcome';
       description = 'Hello NodeJS';
       fs.readdir('data', 'utf8', (err, filelist) => {
-        var contents = templateList(filelist);
-        makePage(title, contents, templateBody(title, description), `<a href="/create">create</a>`, response)
+        var contents = template.List(filelist);
+        template.makePage(title, contents, template.Body(title, description), `<a href="/create">create</a>`, response)
       })
 
     } else {
       fs.readdir('data', 'utf8', (err, filelist) => {
         fs.readFile(`data/${title}`, 'utf8', (err, description) => {
-          var contents = templateList(filelist);
-          makePage(title, contents, templateBody(title, description),
+          var contents = template.List(filelist);
+          template.makePage(title, contents, template.Body(title, description),
             `<a href="/create">create</a> 
             <a href="/update?id=${title}">update</a>
             <form action="/delete_process" method="post">
@@ -84,8 +81,8 @@ var app = http.createServer(function (request, response) {
     title = 'Welcome';
     description = 'Hello NodeJS';
     fs.readdir('data', 'utf8', (err, filelist) => {
-      var contents = templateList(filelist);
-      makePage(title, contents, templateCreate(), '', response)
+      var contents = template.List(filelist);
+      template.makePage(title, contents, template.Create(), '', response)
     })
 
   } else if (pathname === '/create_process') {
@@ -107,8 +104,8 @@ var app = http.createServer(function (request, response) {
   } else if (pathname === '/update') {
     fs.readdir('data', 'utf8', (err, filelist) => {
       fs.readFile(`data/${title}`, 'utf8', (err, description) => {
-        var contents = templateList(filelist);
-        makePage(title, contents, `
+        var contents = template.List(filelist);
+        template.makePage(title, contents, `
             <form action="http://localhost:3000/update_process" method="POST">
               <input type="hidden" name="id" value="${title}">
               <p><input type="text" name='title' placeholder="title" value=${title}></p>
